@@ -18,7 +18,7 @@ Okay lets go:
 easy_install django-picasa
 }}}
   # Or download the [http://code.google.com/p/djgoogle/downloads/list distribution file] into your temp or just check out the picassa module into your project's directory.
-  # Run `setup.py1`
+  # Run `setup.py:
 {{{
 C:\temp>
 C:\temp>python setup.py install --install-purelib="C:\your_project"
