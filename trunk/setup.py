@@ -5,11 +5,11 @@ $Id$
 
 from setuptools import setup, find_packages
 
-version = '1.2'
+version = '1.3'
 
 
 LONG_DESCRIPTION = """
-How to use djgoogle.picasa
+How to use django-googledata.picasa
 --------------------------
 
 
@@ -46,7 +46,7 @@ Or download the distribution file into your temp or just check out the picassa m
 	byte-compiling C:\your_project\picasa\storage.py to storage.pyc
 	byte-compiling C:\your_project\picasa\__init__.py to __init__.pyc
 	running install_egg_info
-	Writing C:\your_project_root\djgoogle-1.0-py2.5.egg-info
+	Writing C:\your_project_root\django-googledata-1.0-py2.5.egg-info
 
 
 settings.py
@@ -59,8 +59,8 @@ Add the framework to the INSTALLED_APPS tuple of your projects settings.py file:
 	    'django.contrib.sessions',
 	    'django.contrib.sites',
 	    'django.contrib.admin',
-	    'your_project.cms',
-	    'your_project.picasa'
+	    'examplesite.archive',
+	    'picasa'
 	)
 
 
@@ -69,13 +69,13 @@ Then add to the settings.py file your PICASA_STORAGE_OPTIONS::
 		'email':'thanosv@gmail.com',
 		'source':'thanos',
 		'password':'mypassword',
-		'user':'thanosv',
+		'userid':'thanosv',
 		'cache': True}
 	
 Where: 
 	email is your Picasa account id. 
 	source is a string you will use to identify how the images where added to your Picasa account. 
-	user is the actual Picassa account that the images will stored in. It doesn't have to be your account just any account you have the access to. 
+	userid is the actual Picassa account that the images will stored in. It doesn't have to be your account just any account you have the access to. 
 	cache is weather you want to use Django's caching back-end. Usually it's worth it. 
 
 If you have set cache to true they you might want to add something like this::
@@ -116,9 +116,9 @@ views.py
 
 Using the above demo model here is a quick view::
 	def images(request):
-		return render_to_response('cms/images.html', {'images':Image.objects})
+		return render_to_response('archive/images.html', {'images':Image.objects})
 
-Here is its corresponding template (templates/cms/images.html) ::
+Here is its corresponding template (templates/archive/images.html) ::
 	<h2>Image List</h2>
 	{% for image in images.all %}
 		<a href="{{image.photo.url}}"><img src="{{image.photo.src}}" width="300"/></a><br/>
@@ -150,10 +150,12 @@ Possible Problems
 ----------------
 
 If you are behind a proxy and you get the following error when you try an upload an image:: 
-	gaierror at /admin/cms/image/add/
+	gaierror at /admin/archive/image/add/
 	(11001, 'getaddrinfo failed')
 
 Check that you have set both HTTP_PROXY and HTTPS_PROXY. HTTPS_PROXY can usually be set to the same host as HTTP_PROXY.
+
+Please see http://code.google.com/p/django-googledata/ for more information.
 """
 
 setup(name='django-picasa',
