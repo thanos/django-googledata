@@ -82,14 +82,14 @@ PICASA_STORAGE_OPTIONS = {
 	'email':'thanosv@gmail.com',
 	'source':'thanos',
 	'password':'mypassword',
-	'user':'thanosv',
+	'userid':'thanosv',
 	'cache': True}
 
 }}}
   Where:
    * email is your Picasa account id.
    * source is a string you will use to identify how the images where added to your Picasa account.
-   * user is the actual Picassa account that the images will stored in. It doesn't have to be your account just any account you  have the access to.
+   * userid is the actual Picassa account that the images will stored in. It doesn't have to be your account just any account you  have the access to.
    * cache is weather you want to use Django's caching back-end. Usually it's worth it.   
    * I'll revisit the other options of `PICASA_STORAGE_OPTIONS` later.
   # if you have set cache to *true* they you might want to add something like this:
