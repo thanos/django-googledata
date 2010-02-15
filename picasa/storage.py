@@ -14,14 +14,6 @@ from gdata.photos import AlbumEntry, PhotoEntry
 import imghdr
 
 
-IMAGE_TYPES = {
-    'square': 'Square',
-    'thumbnail': 'Thumbnail',
-    'small': 'Small',
-    'medium': 'Medium',
-    'large': 'Large'
-}
-
 
 class PicasaStorageException(Exception):
     pass
@@ -44,10 +36,10 @@ class PicasaStorage(Storage):
 	cache = DummyCache()
 	
 	def __init__(self, options=None):
-		
 		self.options = options or settings.PICASA_STORAGE_OPTIONS
 		if self.options.get(self.CACHE_KEY, self.CACHE_DEFAULT):
 			self.cache = cache
+		self.userid = self.options[self.USER_KEY]
 	
 	_gdclient=None
 	def getGData(self):
@@ -62,7 +54,7 @@ class PicasaStorage(Storage):
 			photo = self.url(filename)
 			return True
 		except gdata.photos.service.GooglePhotosException, e:
-			if e[0] != 404:
+			if e[0] not in (404,400):
 				import traceback
 				traceback.print_exc()
 			return False
@@ -87,7 +79,7 @@ class PicasaStorage(Storage):
 		content.seek(0)
 		what = 'image/'+imghdr.what(image_name, content.file.read(2048))
 		content.seek(0)
-		album_url= '/data/feed/api/user/%s/albumid/%s' % (self.user, album_name)
+		album_url= '/data/feed/api/user/%s/albumid/%s' % (self.userid, album_name)
 		photo = self.gdclient.InsertPhotoSimple(album_url, os.path.splitext(image_name)[0], 'Uploading from %s' % self.gdclient.source, content.file, content_type=what)
 		content.close()
 		id = photo.id.text
@@ -109,7 +101,6 @@ class PicasaStorage(Storage):
 	def url(self, filename):
 		return self.entry(filename).GetMediaURL()
 		
-		
 	def entry(self, id):
 		return self.get('entry', id, self.gdclient.GetEntry)
 			
@@ -121,30 +112,27 @@ class PicasaStorage(Storage):
 			if a.title.text == title:
 				return a	
 		
-	def login(self, email, password, source, user='default', **kwa):
+	def login(self, email, password, source, userid='default', **kwa):
 		gdclient = gdata.photos.service.PhotosService()
 		gdclient.email = email
 		gdclient.password = password
 		gdclient.source = source
-		self.user = user
 		gdclient.ProgrammaticLogin()
 		return gdclient
 	
-
-
-	def albumsFromUser(self, user=None):
-		if user is None:
-			user = self.user
-		return self.gdclient.GetUserFeed(user='thanosv').entry
+	def albumsFromUser(self, userid=None):
+		x = self.gdclient
+		if userid is None:
+			userid = self.userid
+		return self.gdclient.GetUserFeed(user= userid).entry
 		
 	def insertAlbum(self, title, description=''):
 		return self.gdclient.InsertAlbum(title, description)
 		
-			
 	def get(self, which, id, getter, *args, **kwa):
 		key = which+':'+id
 		obj = self.cache.get(key)
-		print 'CACHE', key, obj
+		#print 'CACHE', key, obj
 		if obj is None:
 			obj = getter(id, *args, **kwa)
 			self.cache.set(key, obj)
