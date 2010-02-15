@@ -111,7 +111,39 @@ class Image(models.Model):
 {{{
 photo = PicasaField( upload_to='media')
 }}}
-and it will upload the file into an album called _media_, if the album doesn't exist it will be created.
+and it will upload the file into an album called _media_, if the album doesn't exist it will be created. If you want the album to be part of the model.
+
+You can do the pass a callable to upload_to:
+
+{{{
+def get_Album(instance, filename):
+    album = str(instance.album)
+    return os.path.join(album, filename)
+
+class Image(models.Model):
+    album = models.CharField(max_length=50)
+    mediaPhoto = PicasaField( upload_to=get_Album)
+    dropBoxPhoto = PicasaField()
+    
+    def __unicode__(self):
+        return self.dropBoxPhoto.url
+}}}
+
+To make life easier you can give the album field a choices option:
+
+{{{
+def choices():
+    from picasa import PicasaStorage
+    storage= PicasaStorage()
+    return [(a.title.text,a.title.text) for a in storage.albumsFromUser()]
+
+class Image(models.Model):
+    album = models.CharField(max_length=50, choices = choices())
+    .
+    .
+    .
+}}}
+
 
 === admin.py ===
 
