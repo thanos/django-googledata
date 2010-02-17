@@ -181,16 +181,16 @@ Here is its corresponding template (`templates/archive/images.html`) :
 {{{
 <h2>Image List</h2>
 {% for image in images.all %}
-	<a href="{{image.photo.url}}"><img src="{{image.photo.src}}" width="300"/></a><br/>
+	<a href="{{image.dropBoxPhoto.url}}"><img src="{{image.dropBoxPhoto.src}}" width="300"/></a><br/>
 {% endfor %}
 }}}
 and the html it produces.
 {{{
 <h2>Image List</h2>
 
-	<a href="http://picasaweb.google.com/thanosv/Media04#5434869420740374642"><img src="http://lh6.ggpht.com/_w0eENG7V9Qg/S2yI8Wfc8HI/AAAAAAAAAdQ/xrYdkgQF8r0/itunesscreenshot.jpg" width="300"/></a><br/>
+	<a href="http://picasaweb.google.com/thanosv/Media04#5434869420740374642"><img src="http://lh6.ggpht.com/_w0eENG7V9Qg/S2yI8Wfc8HI/AAAAAAAAAdQ/xrYdkgQF8r0/itunesscreenshot.jpg" width="100"/></a><br/>
 
-	<a href="http://picasaweb.google.com/thanosv/Media04#5435910379245055122"><img src="http://lh3.ggpht.com/_w0eENG7V9Qg/S3A7sHHCrJI/AAAAAAAAAdw/QMY9OIviHB0/thanos.jpg" width="300"/></a><br/>
+	<a href="http://picasaweb.google.com/thanosv/Media04#5435910379245055122"><img src="http://lh3.ggpht.com/_w0eENG7V9Qg/S3A7sHHCrJI/AAAAAAAAAdw/QMY9OIviHB0/thanos.jpg" width="100"/></a><br/>
 
 }}}
 
@@ -198,21 +198,22 @@ and the html it produces.
 
 Although this HTML saves your site a lot of bandwidth your images are at the mercy of the browsers resizes and when the original images are large will still be slow to download.
 
-Changing the image source variables to indicate the size they need by using `image.photo.src_300` instead of `image.photo.src` gets Picasa to do the resizing and greatly speeds up the download. requesting an image of the width 300 will in fact get you 320, which is the next available size up.
+Changing the image source variables to indicate the size they need by using `image.photo.src_100` instead of `image.photo.src` gets Picasa to do the resizing and greatly speeds up the download. requesting an image of the width 100 will in fact get you 320, which is the next available size up.
 {{{
 <h2>Image List</h2>
 {% for image in images.all %}
-	<a href="{{image.photo.url}}"><img src="{{image.photo.src_300}}" width="300"/></a><br/>
+	<a href="{{image.dropBoxPhoto.url}}"><img src="{{image.dropBoxPhoto.src_100}}" width="100"/></a><br/>
 {% endfor %}
+
 }}}
 
 And its HTML:
 {{{
 <h2>Image List</h2>
 
-	<a href="http://picasaweb.google.com/thanosv/Media04#5434869420740374642"><img src="http://lh6.ggpht.com/_w0eENG7V9Qg/S2yI8Wfc8HI/AAAAAAAAAdQ/xrYdkgQF8r0/s320/itunesscreenshot.jpg" width="300"/></a><br/>
+	<a href="http://picasaweb.google.com/thanosv/Media04#5434869420740374642"><img src="http://lh6.ggpht.com/_w0eENG7V9Qg/S2yI8Wfc8HI/AAAAAAAAAdQ/xrYdkgQF8r0/s127/itunesscreenshot.jpg" width="100"/></a><br/>
 
-	<a href="http://picasaweb.google.com/thanosv/Media04#5435910379245055122"><img src="http://lh3.ggpht.com/_w0eENG7V9Qg/S3A7sHHCrJI/AAAAAAAAAdw/QMY9OIviHB0/s320/thanos.jpg" width="300"/></a><br/>
+	<a href="http://picasaweb.google.com/thanosv/Media04#5435910379245055122"><img src="http://lh3.ggpht.com/_w0eENG7V9Qg/S3A7sHHCrJI/AAAAAAAAAdw/QMY9OIviHB0/s127/thanos.jpg" width="100"/></a><br/>
 }}}
 
 ===Possible Problems===
