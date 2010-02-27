@@ -32,14 +32,45 @@ class PicasaStorage(Storage):
 	CACHE_KEY='cache'
 	CACHE_TIMEOUT=30
 	CACHE_DEFAULT=False
-	
+
 	cache = DummyCache()
 	
-	def __init__(self, options=None):
+	def __init__(self, options=None, location=None, base_url=None):
+		super(PicasaStorage, self).__init__(location, base_url)
 		self.options = options or settings.PICASA_STORAGE_OPTIONS
 		if self.options.get(self.CACHE_KEY, self.CACHE_DEFAULT):
 			self.cache = cache
 		self.userid = self.options[self.USER_KEY]
+		
+	def _open(self, filename, mode):
+		return urlopen(self.url(filename))
+	
+	def _save(self, name, content):
+		super(PicasaStorage, self)._save(name, content)
+		_, image_name = os.path.split(name)
+		album_name = getattr(content, 'album')
+		if not album_name:
+			album_name = 'default'
+		else:
+			album = self.albumFromTitle(album_name)
+			if not album:
+				print 'inserting album', album_name
+				album = self.insertAlbum(album_name)
+			album_name = album.gphoto_id.text
+		print 'inserting photo', album_name, image_name
+		content.seek(0)
+		what = 'image/'+imghdr.what(image_name, content.file.read(2048))
+		content.seek(0)
+		album_url= '/data/feed/api/user/%s/albumid/%s' % (self.userid, album_name)
+		photo = self.gdclient.InsertPhotoSimple(album_url, os.path.splitext(image_name)[0], 'Uploading from %s' % self.gdclient.source, content.file, content_type=what)
+		content.close()
+		id = photo.id.text
+		self.cache.set(id, photo)
+		return id
+	
+	
+	
+		
 	
 	_gdclient=None
 	def getGData(self):
@@ -59,32 +90,6 @@ class PicasaStorage(Storage):
 				traceback.print_exc()
 			return False
 
-	def _open(self, filename, mode):
-		return urlopen(self.url(filename))
-
-	def delete(self, name):
-		pass
-		
-	def _save(self, name, content):
-		album_name, image_name = os.path.split(name)
-		if not album_name:
-			album_name = 'default'
-		else:
-			album = self.albumFromTitle(album_name)
-			if not album:
-				print 'inserting album', album_name
-				album = self.insertAlbum(album_name)
-			album_name = album.gphoto_id.text
-		print 'inserting photo', album_name, image_name
-		content.seek(0)
-		what = 'image/'+imghdr.what(image_name, content.file.read(2048))
-		content.seek(0)
-		album_url= '/data/feed/api/user/%s/albumid/%s' % (self.userid, album_name)
-		photo = self.gdclient.InsertPhotoSimple(album_url, os.path.splitext(image_name)[0], 'Uploading from %s' % self.gdclient.source, content.file, content_type=what)
-		content.close()
-		id = photo.id.text
-		self.cache.set(id, photo)
-		return id
 		
 	def size(self, name):
 		return self.get('size:'+id, self.getSize)

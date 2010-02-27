@@ -30,6 +30,10 @@ class PicasaAdminImageWidget(AdminFileWidget):
 
 from bisect import bisect
 class PicasaFieldFile(FieldFile):
+	"""
+		File Type object
+	
+	"""
     SIZES = (32, 48, 64, 72, 94, 104, 110, 128, 144, 150, 160, 200, 220, 288, 320, 400, 512, 576, 640, 720, 800, 912, 1024, 1152, 1280, 1440, 1600)
     sizeRE = re.compile(r'src_(\d+)$')
     def __init__(self, *args, **kwargs):
@@ -64,10 +68,14 @@ class PicasaFieldFile(FieldFile):
         
         
     
-    
+   
         
 
 class PicasaField(FileField):
+	"""
+		Field that is used in the model.
+	
+	"""
     attr_class = PicasaFieldFile
     def __init__(self, *args,  **kwargs):
         kwargs.setdefault('upload_to', 'default')

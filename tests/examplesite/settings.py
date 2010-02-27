@@ -1,5 +1,6 @@
 # Django settings for examplesite project.
 import os, os.path
+os.environ["HTTPS_PROXY"] = os.environ["HTTP_PROXY"] 
 
 PROJECT_ROOT = os.getcwd( ) 
 print 'using', PROJECT_ROOT
