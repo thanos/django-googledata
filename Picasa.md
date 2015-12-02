@@ -1,0 +1,225 @@
+## Introduction ##
+
+I'm pretty useless at documentation so I will just guide you through how I use these components in my web site.
+
+## Prerequisites ##
+Before you start you will need to install google's python [api](http://code.google.com/apis/gdata/articles/python_client_lib.html#installing). `easy_install` will do that for you.
+
+
+### Installing ###
+
+Okay lets go:
+  1. Either do
+```
+easy_install django-picasa
+```
+  1. Or download the [distribution file](http://code.google.com/p/djgoogle/downloads/list) into your temp or just check out the picassa module into your project's directory.
+  1. Run `setup.py:
+```
+C:\temp>
+C:\temp>python setup.py install --install-purelib="C:\your_project"
+running install
+running build
+running build_py
+creating build
+creating build\lib
+creating build\lib\picasa
+copying picasa\fields.py -> build\lib\picasa
+copying picasa\storage.py -> build\lib\picasa
+copying picasa\__init__.py -> build\lib\picasa
+running install_lib
+creating C:\your_project_root\picasa
+copying build\lib\picasa\fields.py -> C:\your_project\picasa
+copying build\lib\picasa\storage.py -> C:\your_project\picasa
+copying build\lib\picasa\__init__.py -> C:\your_project\picasa
+byte-compiling C:\your_project\picasa\fields.py to fields.pyc
+byte-compiling C:\your_project\picasa\storage.py to storage.pyc
+byte-compiling C:\your_project\picasa\__init__.py to __init__.pyc
+running install_egg_info
+Writing C:\your_project_root\djgoogle-1.0-py2.5.egg-info
+
+C:\temp\djgoogle-1.0>cd C:\your_project_root
+
+```
+  1. Your procject directory  should looks something like this:
+```
+02/07/2010  05:38 PM    <DIR>          .
+02/07/2010  05:38 PM    <DIR>          ..
+02/05/2010  05:59 PM    <DIR>          archive
+02/08/2010  11:02 AM               239 djgoogle-1.0-py2.5.egg-info
+01/25/2010  09:28 AM               557 manage.py
+02/01/2010  06:18 PM    <DIR>          media
+02/08/2010  10:47 AM    <DIR>          picasa
+02/05/2010  04:09 PM            48,128 yourdatabase.db
+02/05/2010  01:40 PM             4,270 settings.py
+02/01/2010  06:18 PM               834 urls.py
+01/25/2010  09:28 AM                 0 __init__.py
+              11 File(s)        146,603 bytes
+               5 Dir(s)   4,440,264,704 bytes free
+```
+
+
+### settings.py ###
+  1. Add the framework to the `INSTALLED_APPS` tuple of your projects `settings.py` file:
+```
+INSTALLED_APPS = (
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.sites',
+    'django.contrib.admin',
+    'exmaplesite.archive',
+    'picasa'
+)
+```
+  1. Then add to the `settings.py` file your `PICASA_STORAGE_OPTIONS`:
+```
+PICASA_STORAGE_OPTIONS = {
+	'email':'thanosv@gmail.com',
+	'source':'thanos',
+	'password':'mypassword',
+	'userid':'thanosv',
+	'cache': True}
+
+```
+> Where:
+    * email is your Picasa account id.
+    * source is a string you will use to identify how the images where added to your Picasa account.
+    * userid is the actual Picassa account that the images will stored in. It doesn't have to be your account just any account you  have the access to.
+    * cache is weather you want to use Django's caching back-end. Usually it's worth it.
+    * I'll revisit the other options of `PICASA_STORAGE_OPTIONS` later.
+  1. if you have set cache to **true** they you might want to add something like this:
+```
+CACHE_BACKEND = "locmem://?timeout=30&max_entries=400"
+```
+
+### models.py ###
+  1. Now you are done with the settings.py file you can replace the ImageFields with  the picasa field in your models:
+```
+from picasa import  PicasaField
+
+class Image(models.Model):
+	photo = PicasaField( )
+	
+```
+  1. Try it out by uploading an image through your admin page and then visit your Picasa account. You will see the uploaded image in your _Drop Box_.
+  1. Added a `upload_to='media'`
+```
+photo = PicasaField( upload_to='media')
+```
+and it will upload the file into an album called _media_, if the album doesn't exist it will be created. If you want the album to be part of the model.
+
+You can do the pass a callable to upload\_to:
+
+```
+def get_Album(instance, filename):
+    album = str(instance.album)
+    return os.path.join(album, filename)
+
+class Image(models.Model):
+    album = models.CharField(max_length=50)
+    mediaPhoto = PicasaField( upload_to=get_Album)
+    dropBoxPhoto = PicasaField()
+    
+    def __unicode__(self):
+        return self.dropBoxPhoto.url
+```
+
+To make life easier you can give the album field a choices option:
+
+```
+def choices():
+    from picasa import PicasaStorage
+    storage= PicasaStorage()
+    return [(a.title.text,a.title.text) for a in storage.albumsFromUser()]
+
+class Image(models.Model):
+    album = models.CharField(max_length=50, choices = choices())
+    .
+    .
+    .
+```
+
+
+### admin.py ###
+
+  1. The default admin representaion of your image will be handled by the `AdminFileWidget` which will just show the value of `PicasaField.url` of the containing web page in your Picasa account. It's useful but would be better to see a linked thumbnail. To do that you need to override the `PicasaField` with `PicasaAdminImageWidget`. To do that import the widget in your `admin.py` module and add it to an `formfield_overrides` dictionary:
+```
+from picasa import  PicasaAdminImageWidget
+class ImageAdmin(admin.ModelAdmin):	
+	formfield_overrides = {PicasaField: {'widget': PicasaAdminImageWidget},}
+
+admin.site.register(Image ImageAdmin)
+```
+  1. By default PicasaAdminImageWidget generates a 64 pixel icon. The sizes available are
+```
+class PicasaFieldFile(ImageFieldFile):
+	SIZES = (32, 48, 64, 72, 94, 104, 110, 128, 144, 150, 160, 200, 220, 288, 320, 400, 512, 576, 640, 720, 800, 912, 1024, 1152, 1280, 1440, 1600)
+```
+  1. You can override the class attribute SIZE to change the thumbnail's size:
+```
+class ImageWidget(PicasaAdminImageWidget):
+	SIZE='48'
+	
+class ImageAdmin(admin.ModelAdmin):
+	formfield_overrides = {PicasaField: {'widget': ImageWidget},}
+```
+
+
+### views.py ###
+
+Using the above demo model here is a quick view:
+```
+def images(request):
+	return render_to_response('archive/images.html', {'images':Image.objects})
+```
+Here is its corresponding template (`templates/archive/images.html`) :
+```
+<h2>Image List</h2>
+{% for image in images.all %}
+	<a href="{{image.dropBoxPhoto.url}}"><img src="{{image.dropBoxPhoto.src}}" width="300"/></a><br/>
+{% endfor %}
+```
+and the html it produces.
+```
+<h2>Image List</h2>
+
+	<a href="http://picasaweb.google.com/thanosv/Media04#5434869420740374642"><img src="http://lh6.ggpht.com/_w0eENG7V9Qg/S2yI8Wfc8HI/AAAAAAAAAdQ/xrYdkgQF8r0/itunesscreenshot.jpg" width="100"/></a><br/>
+
+	<a href="http://picasaweb.google.com/thanosv/Media04#5435910379245055122"><img src="http://lh3.ggpht.com/_w0eENG7V9Qg/S3A7sHHCrJI/AAAAAAAAAdw/QMY9OIviHB0/thanos.jpg" width="100"/></a><br/>
+
+```
+
+**Different Sizes**
+
+Although this HTML saves your site a lot of bandwidth your images are at the mercy of the browsers resizes and when the original images are large will still be slow to download.
+
+Changing the image source variables to indicate the size they need by using `image.photo.src_100` instead of `image.photo.src` gets Picasa to do the resizing and greatly speeds up the download. requesting an image of the width 100 will in fact get you 320, which is the next available size up.
+```
+<h2>Image List</h2>
+{% for image in images.all %}
+	<a href="{{image.dropBoxPhoto.url}}"><img src="{{image.dropBoxPhoto.src_100}}" width="100"/></a><br/>
+{% endfor %}
+
+```
+
+And its HTML:
+```
+<h2>Image List</h2>
+
+	<a href="http://picasaweb.google.com/thanosv/Media04#5434869420740374642"><img src="http://lh6.ggpht.com/_w0eENG7V9Qg/S2yI8Wfc8HI/AAAAAAAAAdQ/xrYdkgQF8r0/s127/itunesscreenshot.jpg" width="100"/></a><br/>
+
+	<a href="http://picasaweb.google.com/thanosv/Media04#5435910379245055122"><img src="http://lh3.ggpht.com/_w0eENG7V9Qg/S3A7sHHCrJI/AAAAAAAAAdw/QMY9OIviHB0/s127/thanos.jpg" width="100"/></a><br/>
+```
+
+### Possible Problems ###
+  * if you are behind a proxy and you  get the following error when you try an upload an image:
+```
+gaierror at /admin/archive/image/add/
+(11001, 'getaddrinfo failed')
+```
+Check that you have set both `HTTP_PROXY` and `HTTPS_PROXY`. HTTPS\_PROXY can usually be set to the same host as `HTTP_PROXY`.
+
+
+
+_to be continued..._
